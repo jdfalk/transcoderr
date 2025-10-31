@@ -4,7 +4,7 @@
 
 use std::process::{Command, Stdio};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
@@ -59,7 +59,15 @@ fn main() -> Result<()> {
 fn info(input: &str, json: bool) -> Result<()> {
     let mut cmd = Command::new("ffprobe");
     if json {
-        cmd.args(["-v", "error", "-print_format", "json", "-show_format", "-show_streams", input]);
+        cmd.args([
+            "-v",
+            "error",
+            "-print_format",
+            "json",
+            "-show_format",
+            "-show_streams",
+            input,
+        ]);
     } else {
         cmd.args(["-hide_banner", "-i", input]);
     }
@@ -77,7 +85,13 @@ fn info(input: &str, json: bool) -> Result<()> {
     Ok(())
 }
 
-fn transcode(input: &str, output: &str, vcodec: &str, acodec: &str, extra: &[String]) -> Result<()> {
+fn transcode(
+    input: &str,
+    output: &str,
+    vcodec: &str,
+    acodec: &str,
+    extra: &[String],
+) -> Result<()> {
     // Build a conservative default arg list that tries to preserve metadata
     // -map_metadata 0 copies global metadata
     // -movflags use_metadata_tags preserves tags in MP4 containers
