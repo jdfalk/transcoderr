@@ -1,0 +1,16 @@
+# file: .editorconfig
+# version: 1.0.0
+# guid: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+
+root = true
+
+[*]
+end_of_line = lf
+insert_final_newline = true
+charset = utf-8
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.md]
+trim_trailing_whitespace = false

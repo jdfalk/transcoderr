@@ -1,0 +1,29 @@
+# file: Cargo.toml
+# version: 0.1.0
+# guid: d4c3b2a1-9f8e-7d6c-5b4a-3c2d1e0f9a8b
+
+[package]
+name = "transcoderr"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Rust CLI wrapper around ffmpeg/ffprobe to transcode media while preserving metadata."
+repository = "https://github.com/jdfalk/transcoderr"
+homepage = "https://github.com/jdfalk/transcoderr"
+readme = "README.md"
+categories = ["command-line-utilities", "multimedia"]
+keywords = ["ffmpeg", "ffprobe", "transcode", "media", "metadata"]
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"], optional = true }
+serde_json = { version = "1", optional = true }
+
+[features]
+default = []
+json = ["serde", "serde_json"]
+
+[[bin]]
+name = "transcoderr"
+path = "src/main.rs"
