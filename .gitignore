@@ -1,5 +1,5 @@
 # file: .gitignore
-# version: 1.0.0
+# version: 1.0.2
 # guid: 8a9b0c1d-2e3f-4a5b-8c9d-0e1f2a3b4c5d
 
 # Rust / Cargo
@@ -24,3 +24,6 @@ bin/
 # Coverage and reports
 coverage/
 htmlcov/
+
+# Generated test media (tracked via Git LFS)
+# Note: test media under testdata/ are committed using Git LFS.
