@@ -1,5 +1,5 @@
 <!-- file: README.md -->
-<!-- version: 0.4.0 -->
+<!-- version: 0.5.0 -->
 <!-- guid: 0a1b2c3d-4e5f-6789-abcd-ef0123456789 -->
 
 # transcoderr
@@ -11,7 +11,7 @@ A Rust CLI that wraps ffmpeg/ffprobe to transcode media while preserving metadat
 - `info`: show media info via ffprobe (optionally JSON)
 - `transcode`: transcode while preserving metadata (map_metadata, movflags)
 - `batch`: process entire directories recursively with h265 encoding
-- Presets: `original-h265` for high-quality h265 + libopus
+- Presets: `original-h265` (high-quality h265 + libopus), `tv-h265-fast` (faster encode for TV), `movie-quality` (higher quality for films)
 - Sensible defaults with override flags for codecs and extra args
 
 ## Requirements
@@ -41,11 +41,20 @@ cargo run -- transcode input.mp4 output.mkv --vcodec libx265 --acodec libopus
 # Use preset for original quality (h265+opus, CRF 18, preset slow)
 cargo run -- transcode input.mp4 output.mkv --preset original-h265
 
+# Dry-run a single transcode with a preset (no execution)
+cargo run -- transcode input.mp4 output.mkv --preset original-h265 --dry-run
+
 # Batch convert TV show directory to h265+aac
 cargo run -- batch /path/to/tv-shows /path/to/output --vcodec libx265 --acodec aac --ext mkv
 
 # Batch with preset (original quality -> h265+opus)
 cargo run -- batch /path/to/tv-shows /path/to/output --preset original-h265 --ext mkv
+
+# Batch with TV fast preset (h265+aac, CRF 22, preset medium)
+cargo run -- batch /path/to/tv-shows /path/to/output --preset tv-h265-fast --ext mkv --dry-run
+
+# Batch with movie-quality preset (h265+opus, CRF 16, preset slow)
+cargo run -- batch /path/to/movies /path/to/output --preset movie-quality --ext mkv
 
 # Advanced: custom CRF and preset
 cargo run -- transcode input.mp4 output.mp4 --vcodec libx265 --acodec libopus --extra -crf 28 -preset medium
@@ -83,7 +92,7 @@ Generated examples:
 - [x] Batch processing for directories
 - [x] Dry-run mode to preview ffmpeg commands
 - [x] Preset: original-h265 (h265+opus, CRF 18, slow)
-- [ ] Additional presets (tv-h265-fast, movie-quality)
+- [x] Additional presets (tv-h265-fast, movie-quality)
 - [ ] Progress reporting and ETA
 - [ ] Resume capability for interrupted batches
 - [ ] Extended metadata (cover art, chapters)

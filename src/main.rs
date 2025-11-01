@@ -1,12 +1,12 @@
 // file: src/main.rs
-// version: 0.3.0
+// version: 0.4.0
 // guid: 0f9e8d7c-6b5a-4c3d-2e1f-0a9b8c7d6e5f
 
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
@@ -44,6 +44,9 @@ enum Commands {
         /// Extra ffmpeg args (passed as-is after standard args)
         #[arg(long, num_args = 0.., value_delimiter = ' ')]
         extra: Vec<String>,
+        /// Dry run: print command without executing
+        #[arg(long)]
+        dry_run: bool,
     },
     /// Batch transcode a directory recursively (default: h265+aac)
     Batch {
@@ -86,9 +89,19 @@ fn main() -> Result<()> {
             vcodec,
             acodec,
             extra,
+            dry_run,
         } => {
-            let (vcodec2, acodec2, extra2) = apply_preset(preset.as_deref(), &vcodec, &acodec, &extra);
-            transcode(&input, &output, &vcodec2, &acodec2, &extra2)
+            let (vcodec2, acodec2, extra2) =
+                apply_preset(preset.as_deref(), &vcodec, &acodec, &extra);
+            if dry_run {
+                println!(
+                    "[DRY RUN] Would transcode '{}' -> '{}' with vcodec={} acodec={} extra={:?}",
+                    input, output, vcodec2, acodec2, extra2
+                );
+                Ok(())
+            } else {
+                transcode(&input, &output, &vcodec2, &acodec2, &extra2)
+            }
         }
         Commands::Batch {
             input_dir,
@@ -323,10 +336,12 @@ fn apply_preset(
             // x265 CRF 18 is commonly considered visually lossless; preset slow for quality
             // Use libopus for efficient audio at 160k by default
             "original-h265" | "original" => {
-                if vcodec == "libx264" { // unchanged from default implies not specified
+                if vcodec == "libx264" {
+                    // unchanged from default implies not specified
                     out_v = "libx265".to_string();
                 }
-                if acodec == "aac" { // unchanged from default implies not specified
+                if acodec == "aac" {
+                    // unchanged from default implies not specified
                     out_a = "libopus".to_string();
                 }
                 out_extra.extend([
@@ -337,6 +352,38 @@ fn apply_preset(
                     // audio bitrate target (can be overridden by user extra)
                     "-b:a".to_string(),
                     "160k".to_string(),
+                ]);
+            }
+            "tv-h265-fast" | "tv-fast" => {
+                if vcodec == "libx264" {
+                    out_v = "libx265".to_string();
+                }
+                if acodec == "aac" {
+                    out_a = "aac".to_string();
+                }
+                out_extra.extend([
+                    "-crf".to_string(),
+                    "22".to_string(),
+                    "-preset".to_string(),
+                    "medium".to_string(),
+                    "-b:a".to_string(),
+                    "160k".to_string(),
+                ]);
+            }
+            "movie-quality" | "movie" => {
+                if vcodec == "libx264" {
+                    out_v = "libx265".to_string();
+                }
+                if acodec == "aac" {
+                    out_a = "libopus".to_string();
+                }
+                out_extra.extend([
+                    "-crf".to_string(),
+                    "16".to_string(),
+                    "-preset".to_string(),
+                    "slow".to_string(),
+                    "-b:a".to_string(),
+                    "192k".to_string(),
                 ]);
             }
             _ => {

@@ -1,5 +1,5 @@
 <!-- file: TODO.md -->
-<!-- version: 0.2.0 -->
+<!-- version: 0.3.0 -->
 <!-- guid: 12345678-90ab-cdef-1234-567890abcdef -->
 
 # TODO
@@ -14,7 +14,8 @@
 
 ## In Progress
 
-- [ ] Add presets (tv-h265-fast, movie-quality, web-optimized)
+- [x] Add presets (tv-h265-fast, movie-quality)
+- [ ] Add preset (web-optimized)
 - [ ] Progress reporting with ETA during batch conversion
 - [ ] Resume capability for interrupted batches (skip already converted files)
 
