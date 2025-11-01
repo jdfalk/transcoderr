@@ -1,5 +1,5 @@
 <!-- file: TODO.md -->
-<!-- version: 0.3.0 -->
+<!-- version: 0.4.0 -->
 <!-- guid: 12345678-90ab-cdef-1234-567890abcdef -->
 
 # TODO
@@ -21,6 +21,7 @@
 
 ## Planned
 
+- [ ] Embed static ffmpeg build from <https://github.com/jdfalk/FFmpeg-Builds>
 - [ ] Implement unit tests for CLI argument parsing
 - [ ] Add integration tests with sample media files (skippable in CI)
 - [ ] Extend metadata preservation options (cover art, chapters)

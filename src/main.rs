@@ -1,5 +1,5 @@
 // file: src/main.rs
-// version: 0.4.0
+// version: 0.5.0
 // guid: 0f9e8d7c-6b5a-4c3d-2e1f-0a9b8c7d6e5f
 
 use std::fs;
@@ -38,7 +38,7 @@ enum Commands {
         /// Video codec (e.g., libx264, libx265, copy)
         #[arg(long, default_value = "libx264")]
         vcodec: String,
-        /// Audio codec (e.g., aac, libopus, copy)
+        /// Audio codec (e.g., aac, ac3, copy)
         #[arg(long, default_value = "aac")]
         acodec: String,
         /// Extra ffmpeg args (passed as-is after standard args)
@@ -60,7 +60,7 @@ enum Commands {
         /// Video codec (e.g., libx265)
         #[arg(long, default_value = "libx265")]
         vcodec: String,
-        /// Audio codec (e.g., aac, libopus)
+        /// Audio codec (e.g., aac, ac3)
         #[arg(long, default_value = "aac")]
         acodec: String,
         /// Output file extension (e.g., mkv, mp4)
@@ -332,9 +332,9 @@ fn apply_preset(
 
     if let Some(name) = preset {
         match name {
-            // "Original quality" intent: visually lossless-ish h265 and efficient audio
+            // "Original quality" intent: visually lossless-ish h265 and high-quality audio
             // x265 CRF 18 is commonly considered visually lossless; preset slow for quality
-            // Use libopus for efficient audio at 160k by default
+            // Use AAC at 256k for high-quality, universally compatible audio
             "original-h265" | "original" => {
                 if vcodec == "libx264" {
                     // unchanged from default implies not specified
@@ -342,7 +342,7 @@ fn apply_preset(
                 }
                 if acodec == "aac" {
                     // unchanged from default implies not specified
-                    out_a = "libopus".to_string();
+                    out_a = "aac".to_string();
                 }
                 out_extra.extend([
                     "-crf".to_string(),
@@ -351,7 +351,7 @@ fn apply_preset(
                     "slow".to_string(),
                     // audio bitrate target (can be overridden by user extra)
                     "-b:a".to_string(),
-                    "160k".to_string(),
+                    "256k".to_string(),
                 ]);
             }
             "tv-h265-fast" | "tv-fast" => {
@@ -375,7 +375,7 @@ fn apply_preset(
                     out_v = "libx265".to_string();
                 }
                 if acodec == "aac" {
-                    out_a = "libopus".to_string();
+                    out_a = "aac".to_string();
                 }
                 out_extra.extend([
                     "-crf".to_string(),
@@ -383,7 +383,7 @@ fn apply_preset(
                     "-preset".to_string(),
                     "slow".to_string(),
                     "-b:a".to_string(),
-                    "192k".to_string(),
+                    "320k".to_string(),
                 ]);
             }
             _ => {
