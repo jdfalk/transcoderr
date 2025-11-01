@@ -1,12 +1,28 @@
 <!-- file: TODO.md -->
-<!-- version: 0.1.0 -->
+<!-- version: 0.2.0 -->
 <!-- guid: 12345678-90ab-cdef-1234-567890abcdef -->
 
 # TODO
 
+## Completed
+
+- [x] Basic transcode command with metadata preservation
+- [x] Git LFS setup for test media
+- [x] Batch processing for recursive directory conversion
+- [x] Dry-run mode for batch operations
+- [x] GitHub Actions CI for lint, build, and basic smoke test
+
+## In Progress
+
+- [ ] Add presets (tv-h265-fast, movie-quality, web-optimized)
+- [ ] Progress reporting with ETA during batch conversion
+- [ ] Resume capability for interrupted batches (skip already converted files)
+
+## Planned
+
 - [ ] Implement unit tests for CLI argument parsing
 - [ ] Add integration tests with sample media files (skippable in CI)
 - [ ] Extend metadata preservation options (cover art, chapters)
-- [ ] Add presets (e.g., h264, h265, aac, opus) with sensible defaults
-- [ ] Provide dry-run mode to print computed ffmpeg command
-- [ ] Add GitHub Actions CI for lint, build, and basic smoke test
+- [ ] Hardware acceleration support (VAAPI, NVENC, VideoToolbox)
+- [ ] Parallel processing for batch operations
+- [ ] Quality comparison reports (original vs. transcoded file sizes)
