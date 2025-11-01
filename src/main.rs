@@ -1,12 +1,12 @@
 // file: src/main.rs
-// version: 0.2.0
+// version: 0.3.0
 // guid: 0f9e8d7c-6b5a-4c3d-2e1f-0a9b8c7d6e5f
 
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
-use anyhow::{Context, Result, bail};
+use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
 
 #[derive(Parser, Debug)]
@@ -32,6 +32,9 @@ enum Commands {
         input: String,
         /// Output media file
         output: String,
+        /// Preset name (e.g., original-h265)
+        #[arg(long)]
+        preset: Option<String>,
         /// Video codec (e.g., libx264, libx265, copy)
         #[arg(long, default_value = "libx264")]
         vcodec: String,
@@ -48,6 +51,9 @@ enum Commands {
         input_dir: String,
         /// Output directory (mirrors input structure)
         output_dir: String,
+        /// Preset name (e.g., original-h265)
+        #[arg(long)]
+        preset: Option<String>,
         /// Video codec (e.g., libx265)
         #[arg(long, default_value = "libx265")]
         vcodec: String,
@@ -76,13 +82,18 @@ fn main() -> Result<()> {
         Commands::Transcode {
             input,
             output,
+            preset,
             vcodec,
             acodec,
             extra,
-        } => transcode(&input, &output, &vcodec, &acodec, &extra),
+        } => {
+            let (vcodec2, acodec2, extra2) = apply_preset(preset.as_deref(), &vcodec, &acodec, &extra);
+            transcode(&input, &output, &vcodec2, &acodec2, &extra2)
+        }
         Commands::Batch {
             input_dir,
             output_dir,
+            preset,
             vcodec,
             acodec,
             ext,
@@ -92,6 +103,7 @@ fn main() -> Result<()> {
         } => batch_transcode(
             &input_dir,
             &output_dir,
+            preset.as_deref(),
             &vcodec,
             &acodec,
             &ext,
@@ -182,6 +194,7 @@ fn transcode(
 fn batch_transcode(
     input_dir: &str,
     output_dir: &str,
+    preset: Option<&str>,
     vcodec: &str,
     acodec: &str,
     ext: &str,
@@ -207,11 +220,14 @@ fn batch_transcode(
         return Ok(());
     }
 
+    // Apply preset once to get effective settings
+    let (eff_vcodec, eff_acodec, eff_extra) = apply_preset(preset, vcodec, acodec, extra);
+
     println!(
         "Found {} files to transcode (vcodec={}, acodec={}, ext={})",
         files.len(),
-        vcodec,
-        acodec,
+        eff_vcodec,
+        eff_acodec,
         ext
     );
 
@@ -240,8 +256,8 @@ fn batch_transcode(
 
         if dry_run {
             println!(
-                "  [DRY RUN] Would transcode with vcodec={} acodec={}",
-                vcodec, acodec
+                "  [DRY RUN] Would transcode with vcodec={} acodec={} extra={:?}",
+                eff_vcodec, eff_acodec, eff_extra
             );
             continue;
         }
@@ -250,9 +266,9 @@ fn batch_transcode(
         if let Err(e) = transcode(
             &input_file.to_string_lossy(),
             &output_file.to_string_lossy(),
-            vcodec,
-            acodec,
-            extra,
+            &eff_vcodec,
+            &eff_acodec,
+            &eff_extra,
         ) {
             eprintln!("  ERROR: {}", e);
             eprintln!("  Skipping and continuing with next file...");
@@ -284,4 +300,53 @@ fn collect_media_files(dir: &Path, extensions: &[&str]) -> Result<Vec<PathBuf>> 
     }
 
     Ok(files)
+}
+
+// Compute effective codecs and args based on an optional preset.
+// Precedence rules:
+// - If preset is provided, it supplies default vcodec/acodec and extra args
+// - Explicit --vcodec/--acodec override preset's codecs
+// - User --extra are appended after preset extras so they override
+fn apply_preset(
+    preset: Option<&str>,
+    vcodec: &str,
+    acodec: &str,
+    extra: &[String],
+) -> (String, String, Vec<String>) {
+    let mut out_v = vcodec.to_string();
+    let mut out_a = acodec.to_string();
+    let mut out_extra: Vec<String> = Vec::new();
+
+    if let Some(name) = preset {
+        match name {
+            // "Original quality" intent: visually lossless-ish h265 and efficient audio
+            // x265 CRF 18 is commonly considered visually lossless; preset slow for quality
+            // Use libopus for efficient audio at 160k by default
+            "original-h265" | "original" => {
+                if vcodec == "libx264" { // unchanged from default implies not specified
+                    out_v = "libx265".to_string();
+                }
+                if acodec == "aac" { // unchanged from default implies not specified
+                    out_a = "libopus".to_string();
+                }
+                out_extra.extend([
+                    "-crf".to_string(),
+                    "18".to_string(),
+                    "-preset".to_string(),
+                    "slow".to_string(),
+                    // audio bitrate target (can be overridden by user extra)
+                    "-b:a".to_string(),
+                    "160k".to_string(),
+                ]);
+            }
+            _ => {
+                // Unknown preset: ignore silently; could print a warning later
+            }
+        }
+    }
+
+    // Append user extras last to allow override
+    out_extra.extend(extra.iter().cloned());
+
+    (out_v, out_a, out_extra)
 }

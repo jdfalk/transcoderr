@@ -1,5 +1,5 @@
 <!-- file: README.md -->
-<!-- version: 0.3.0 -->
+<!-- version: 0.4.0 -->
 <!-- guid: 0a1b2c3d-4e5f-6789-abcd-ef0123456789 -->
 
 # transcoderr
@@ -11,6 +11,7 @@ A Rust CLI that wraps ffmpeg/ffprobe to transcode media while preserving metadat
 - `info`: show media info via ffprobe (optionally JSON)
 - `transcode`: transcode while preserving metadata (map_metadata, movflags)
 - `batch`: process entire directories recursively with h265 encoding
+- Presets: `original-h265` for high-quality h265 + libopus
 - Sensible defaults with override flags for codecs and extra args
 
 ## Requirements
@@ -37,8 +38,14 @@ cargo run -- info testdata/test_color_720p_h264_aac.mp4 --json
 # Transcode single file (h265+opus, preserve metadata)
 cargo run -- transcode input.mp4 output.mkv --vcodec libx265 --acodec libopus
 
+# Use preset for original quality (h265+opus, CRF 18, preset slow)
+cargo run -- transcode input.mp4 output.mkv --preset original-h265
+
 # Batch convert TV show directory to h265+aac
 cargo run -- batch /path/to/tv-shows /path/to/output --vcodec libx265 --acodec aac --ext mkv
+
+# Batch with preset (original quality -> h265+opus)
+cargo run -- batch /path/to/tv-shows /path/to/output --preset original-h265 --ext mkv
 
 # Advanced: custom CRF and preset
 cargo run -- transcode input.mp4 output.mp4 --vcodec libx265 --acodec libopus --extra -crf 28 -preset medium
@@ -73,9 +80,10 @@ Generated examples:
 
 - [x] Basic transcode with metadata preservation
 - [x] Git LFS setup for test media
-- [ ] Batch processing for directories
-- [ ] Presets (tv-h265, movie-quality, fast-encode)
-- [ ] Dry-run mode to preview ffmpeg commands
+- [x] Batch processing for directories
+- [x] Dry-run mode to preview ffmpeg commands
+- [x] Preset: original-h265 (h265+opus, CRF 18, slow)
+- [ ] Additional presets (tv-h265-fast, movie-quality)
 - [ ] Progress reporting and ETA
 - [ ] Resume capability for interrupted batches
 - [ ] Extended metadata (cover art, chapters)
