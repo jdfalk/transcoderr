@@ -5,7 +5,7 @@
 //! Benchmarks for transcoderr operations
 //! Run with: cargo bench
 
-use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use std::path::PathBuf;
 use std::process::Command;
 
@@ -21,7 +21,11 @@ fn binary_path() -> PathBuf {
     let mut path = project_root();
     path.push("target");
     path.push("release");
-    path.push(if cfg!(windows) { "transcoderr.exe" } else { "transcoderr" });
+    path.push(if cfg!(windows) {
+        "transcoderr.exe"
+    } else {
+        "transcoderr"
+    });
     path
 }
 
@@ -40,7 +44,7 @@ fn list_test_media() -> Vec<PathBuf> {
     if !testdata.exists() {
         return vec![];
     }
-    
+
     std::fs::read_dir(testdata)
         .ok()
         .map(|entries| {
@@ -63,24 +67,24 @@ fn bench_info_command(c: &mut Criterion) {
         eprintln!("SKIP benchmark: ffprobe not available");
         return;
     }
-    
+
     let test_files = list_test_media();
     if test_files.is_empty() {
         eprintln!("SKIP benchmark: No test media files found");
         return;
     }
-    
+
     let binary = binary_path();
     if !binary.exists() {
         eprintln!("SKIP benchmark: Binary not found. Run 'cargo build --release' first.");
         return;
     }
-    
+
     let mut group = c.benchmark_group("info_command");
-    
+
     for test_file in test_files.iter() {
         let file_name = test_file.file_name().unwrap().to_str().unwrap();
-        
+
         group.bench_with_input(
             BenchmarkId::from_parameter(file_name),
             test_file,
@@ -91,10 +95,10 @@ fn bench_info_command(c: &mut Criterion) {
                         .output()
                         .expect("Failed to run info command")
                 });
-            }
+            },
         );
     }
-    
+
     group.finish();
 }
 
@@ -104,18 +108,18 @@ fn bench_transcode_dry_run(c: &mut Criterion) {
         eprintln!("SKIP benchmark: No test media files found");
         return;
     }
-    
+
     let binary = binary_path();
     if !binary.exists() {
         eprintln!("SKIP benchmark: Binary not found. Run 'cargo build --release' first.");
         return;
     }
-    
+
     let mut group = c.benchmark_group("transcode_dry_run");
-    
+
     for test_file in test_files.iter() {
         let file_name = test_file.file_name().unwrap().to_str().unwrap();
-        
+
         group.bench_with_input(
             BenchmarkId::from_parameter(file_name),
             test_file,
@@ -126,15 +130,15 @@ fn bench_transcode_dry_run(c: &mut Criterion) {
                             "transcode",
                             path.to_str().unwrap(),
                             "/tmp/output.mkv",
-                            "--dry-run"
+                            "--dry-run",
                         ])
                         .output()
                         .expect("Failed to run transcode dry-run")
                 });
-            }
+            },
         );
     }
-    
+
     group.finish();
 }
 
@@ -144,18 +148,18 @@ fn bench_preset_parsing(c: &mut Criterion) {
         eprintln!("SKIP benchmark: No test media files found");
         return;
     }
-    
+
     let binary = binary_path();
     if !binary.exists() {
         eprintln!("SKIP benchmark: Binary not found. Run 'cargo build --release' first.");
         return;
     }
-    
+
     let test_file = &test_files[0];
     let presets = vec!["original-h265", "tv-h265-fast", "movie-quality"];
-    
+
     let mut group = c.benchmark_group("preset_parsing");
-    
+
     for preset in presets {
         group.bench_with_input(
             BenchmarkId::from_parameter(preset),
@@ -167,16 +171,17 @@ fn bench_preset_parsing(c: &mut Criterion) {
                             "transcode",
                             test_file.to_str().unwrap(),
                             "/tmp/output.mkv",
-                            "--preset", preset_name,
-                            "--dry-run"
+                            "--preset",
+                            preset_name,
+                            "--dry-run",
                         ])
                         .output()
                         .expect("Failed to run transcode with preset")
                 });
-            }
+            },
         );
     }
-    
+
     group.finish();
 }
 
@@ -186,13 +191,13 @@ fn bench_batch_dry_run(c: &mut Criterion) {
         eprintln!("SKIP benchmark: testdata directory not found");
         return;
     }
-    
+
     let binary = binary_path();
     if !binary.exists() {
         eprintln!("SKIP benchmark: Binary not found. Run 'cargo build --release' first.");
         return;
     }
-    
+
     c.bench_function("batch_dry_run", |b| {
         b.iter(|| {
             Command::new(&binary)
@@ -200,7 +205,7 @@ fn bench_batch_dry_run(c: &mut Criterion) {
                     "batch",
                     testdata.to_str().unwrap(),
                     "/tmp/output",
-                    "--dry-run"
+                    "--dry-run",
                 ])
                 .output()
                 .expect("Failed to run batch dry-run")

@@ -21,16 +21,22 @@ pub fn testdata_dir() -> PathBuf {
 pub fn binary_path() -> PathBuf {
     let mut path = project_root();
     path.push("target");
-    path.push(if cfg!(debug_assertions) { "debug" } else { "release" });
-    path.push(if cfg!(windows) { "transcoderr.exe" } else { "transcoderr" });
+    path.push(if cfg!(debug_assertions) {
+        "debug"
+    } else {
+        "release"
+    });
+    path.push(if cfg!(windows) {
+        "transcoderr.exe"
+    } else {
+        "transcoderr"
+    });
     path
 }
 
 /// Run the transcoderr binary with given arguments
 pub fn run_transcoderr(args: &[&str]) -> Result<std::process::Output, std::io::Error> {
-    Command::new(binary_path())
-        .args(args)
-        .output()
+    Command::new(binary_path()).args(args).output()
 }
 
 /// Check if ffmpeg is available on PATH
@@ -59,13 +65,14 @@ pub fn ffprobe_available() -> bool {
 pub fn get_media_info(path: &Path) -> Result<String, std::io::Error> {
     let output = Command::new("ffprobe")
         .args([
-            "-v", "error",
+            "-v",
+            "error",
             "-show_format",
             "-show_streams",
-            path.to_str().unwrap()
+            path.to_str().unwrap(),
         ])
         .output()?;
-    
+
     Ok(String::from_utf8_lossy(&output.stdout).to_string())
 }
 
@@ -80,7 +87,7 @@ pub fn list_test_media() -> Vec<PathBuf> {
     if !testdata.exists() {
         return vec![];
     }
-    
+
     std::fs::read_dir(testdata)
         .ok()
         .map(|entries| {

@@ -225,13 +225,13 @@ fn test_my_new_feature() {
     // Arrange
     let test_file = &common::list_test_media()[0];
     let temp_dir = TempDir::new().expect("Failed to create temp dir");
-    
+
     // Act
     let output = common::run_transcoderr(&[
         "my-command",
         test_file.to_str().unwrap()
     ]).expect("Failed to run command");
-    
+
     // Assert
     assert!(output.status.success(), "Command should succeed");
     let stdout = String::from_utf8_lossy(&output.stdout);
@@ -251,7 +251,7 @@ fn test_slow_operation() {
         eprintln!("SKIP: ffmpeg not available");
         return;
     }
-    
+
     // ... test implementation
 }
 ```
