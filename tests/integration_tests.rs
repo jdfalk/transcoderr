@@ -84,7 +84,11 @@ fn test_info_all_media_files_dry() {
     for test_file in test_files.iter() {
         let output = common::run_transcoderr(&["info", test_file.to_str().unwrap()])
             .expect("Failed to run info command");
-        assert!(output.status.success(), "Info command should succeed for {:?}", test_file);
+        assert!(
+            output.status.success(),
+            "Info command should succeed for {:?}",
+            test_file
+        );
     }
 }
 
@@ -146,7 +150,12 @@ fn test_transcode_dry_run_all_formats_to_multiple_exts() {
                 "--dry-run",
             ])
             .expect("Failed to run transcode dry-run");
-            assert!(output.status.success(), "Dry-run should succeed for {:?} -> .{}", test_file, ext);
+            assert!(
+                output.status.success(),
+                "Dry-run should succeed for {:?} -> .{}",
+                test_file,
+                ext
+            );
         }
     }
 }
