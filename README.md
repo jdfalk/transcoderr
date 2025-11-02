@@ -1,10 +1,10 @@
 <!-- file: README.md -->
-<!-- version: 0.6.0 -->
+<!-- version: 0.6.1 -->
 <!-- guid: 0a1b2c3d-4e5f-6789-abcd-ef0123456789 -->
 
 # transcoderr
 
-A Rust CLI that wraps ffmpeg/ffprobe to transcode media while preserving metadata. Designed for batch conversion of TV shows and movies to modern codecs (h265/opus/aac).
+ A Rust CLI that wraps ffmpeg/ffprobe to transcode media while preserving metadata. Designed for batch conversion of TV shows and movies to modern codecs (h265/aac).
 
 ## Features
 
@@ -80,10 +80,27 @@ python3 scripts/generate_test_media.py
 Generated examples:
 
 - `test_color_720p_h264_aac.mp4` (3s, color pattern, metadata)
-- `test_bars_480p_h265_opus.mkv` (3s, SMPTE bars)
-- `test_audio_sine_opus.ogg` (3s, audio-only)
+- `test_bars_480p_h265_aac.mkv` (3s, SMPTE bars)
+- `test_audio_sine_aac.m4a` (3s, audio-only)
 - `test_with_subs_h264_aac.mp4` (3s, embedded subtitles)
 
+
+## Testing
+
+Comprehensive test and benchmark suite available. See [TESTING.md](TESTING.md) for details.
+
+Quick test:
+
+```bash
+# Run fast tests
+cargo test
+
+# Run all tests including slow transcoding tests
+cargo test -- --ignored
+
+# Run benchmarks
+cargo bench
+```
 
 ## Roadmap
 
@@ -91,9 +108,10 @@ Generated examples:
 - [x] Git LFS setup for test media
 - [x] Batch processing for directories
 - [x] Dry-run mode to preview ffmpeg commands
-- [x] Preset: original-h265 (h265+opus, CRF 18, slow)
+- [x] Preset: original-h265 (h265+aac 256k, CRF 18, slow)
 - [x] Additional presets (tv-h265-fast, movie-quality)
+- [x] Integration tests and benchmarks
 - [ ] Progress reporting and ETA
 - [ ] Resume capability for interrupted batches
 - [ ] Extended metadata (cover art, chapters)
-- [ ] Integration tests (optional in CI)
+- [ ] Hardware acceleration support

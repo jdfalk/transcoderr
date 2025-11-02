@@ -1,5 +1,5 @@
 # file: Cargo.toml
-# version: 0.1.0
+# version: 0.2.0
 # guid: d4c3b2a1-9f8e-7d6c-5b4a-3c2d1e0f9a8b
 
 [package]
@@ -20,6 +20,10 @@ clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"], optional = true }
 serde_json = { version = "1", optional = true }
 
+[dev-dependencies]
+tempfile = "3"
+criterion = { version = "0.5", features = ["html_reports"] }
+
 [features]
 default = []
 json = ["serde", "serde_json"]
@@ -27,3 +31,7 @@ json = ["serde", "serde_json"]
 [[bin]]
 name = "transcoderr"
 path = "src/main.rs"
+
+[[bench]]
+name = "transcode_benchmark"
+harness = false

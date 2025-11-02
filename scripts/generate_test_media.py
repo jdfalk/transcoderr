@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # file: scripts/generate_test_media.py
-# version: 1.0.1
+# version: 1.1.0
 # guid: 7b0c2a9e-3f5d-4a6b-9c8d-1e2f3a4b5c6d
 
 """
@@ -10,8 +10,8 @@ Outputs are written to ./testdata/ (gitignored).
 
 Creates:
 - test_color_720p_h264_aac.mp4 (3s, color pattern, metadata)
-- test_bars_480p_h265_opus.mkv (3s, SMPTE bars)
-- test_audio_sine_opus.ogg (3s, audio-only)
+- test_bars_480p_h265_aac.mkv (3s, SMPTE bars)
+- test_audio_sine_aac.m4a (3s, audio-only AAC)
 - test_with_subs_h264_aac.mp4 (3s, embeds simple subtitles)
 
 Requirements:
@@ -73,7 +73,7 @@ def make_color_mp4(out: Path) -> None:
 
 
 def make_bars_mkv(out: Path) -> None:
-    # 3s SMPTE bars, 640x480, h265+opus
+    # 3s SMPTE bars, 640x480, h265+aac
     cmd = [
         "ffmpeg",
         "-hide_banner",
@@ -91,14 +91,16 @@ def make_bars_mkv(out: Path) -> None:
         "-c:v",
         "libx265",
         "-c:a",
-        "libopus",
+        "aac",
+        "-b:a",
+        "160k",
         str(out),
     ]
     run(cmd)
 
 
 def make_audio_only(out: Path) -> None:
-    # 3s sine wave to OGG/Opus
+    # 3s sine wave to AAC in M4A
     cmd = [
         "ffmpeg",
         "-hide_banner",
@@ -108,7 +110,9 @@ def make_audio_only(out: Path) -> None:
         "-i",
         "sine=frequency=440:duration=3",
         "-c:a",
-        "libopus",
+        "aac",
+        "-b:a",
+        "192k",
         str(out),
     ]
     run(cmd)
@@ -180,8 +184,8 @@ def main() -> int:
 
     try:
         make_color_mp4(outdir / "test_color_720p_h264_aac.mp4")
-        make_bars_mkv(outdir / "test_bars_480p_h265_opus.mkv")
-        make_audio_only(outdir / "test_audio_sine_opus.ogg")
+        make_bars_mkv(outdir / "test_bars_480p_h265_aac.mkv")
+        make_audio_only(outdir / "test_audio_sine_aac.m4a")
         make_with_subs(outdir / "test_with_subs_h264_aac.mp4", tmpdir)
         print(f"\n✅ Generated test media in: {outdir}")
         return 0
