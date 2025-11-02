@@ -1,5 +1,5 @@
 // file: src/main.rs
-// version: 0.5.0
+// version: 0.6.0
 // guid: 0f9e8d7c-6b5a-4c3d-2e1f-0a9b8c7d6e5f
 
 use std::fs;
@@ -30,8 +30,8 @@ enum Commands {
     Transcode {
         /// Input media file
         input: String,
-        /// Output media file
-        output: String,
+        /// Optional output media file; if omitted, will write next to input as `<name>_transcoded.mkv`
+        output: Option<String>,
         /// Preset name (e.g., original-h265)
         #[arg(long)]
         preset: Option<String>,
@@ -91,16 +91,28 @@ fn main() -> Result<()> {
             extra,
             dry_run,
         } => {
+            // Determine safe output path
+            let resolved_output = resolve_output_path(&input, output.as_deref(), Some("mkv"))?;
             let (vcodec2, acodec2, extra2) =
                 apply_preset(preset.as_deref(), &vcodec, &acodec, &extra);
             if dry_run {
                 println!(
                     "[DRY RUN] Would transcode '{}' -> '{}' with vcodec={} acodec={} extra={:?}",
-                    input, output, vcodec2, acodec2, extra2
+                    input,
+                    resolved_output.display(),
+                    vcodec2,
+                    acodec2,
+                    extra2
                 );
                 Ok(())
             } else {
-                transcode(&input, &output, &vcodec2, &acodec2, &extra2)
+                transcode(
+                    &input,
+                    &resolved_output.to_string_lossy(),
+                    &vcodec2,
+                    &acodec2,
+                    &extra2,
+                )
             }
         }
         Commands::Batch {
@@ -125,6 +137,63 @@ fn main() -> Result<()> {
             dry_run,
         ),
     }
+}
+
+// Resolve a safe output path based on input and optional user-provided output.
+// Rules:
+// - If user output is provided and is not identical to input path, use it.
+// - If user output is identical to input (same full path), or not provided,
+//   create `<stem>_transcoded.<ext>` next to the input. Default ext is `mkv`.
+fn resolve_output_path(
+    input: &str,
+    output_opt: Option<&str>,
+    default_ext: Option<&str>,
+) -> Result<PathBuf> {
+    let in_path = Path::new(input)
+        .canonicalize()
+        .unwrap_or_else(|_| PathBuf::from(input));
+
+    if let Some(out_str) = output_opt {
+        let out_path_try = Path::new(out_str);
+        let out_path_abs = if out_path_try.is_absolute() {
+            out_path_try.to_path_buf()
+        } else {
+            // resolve relative to current dir
+            std::env::current_dir()
+                .unwrap_or_else(|_| PathBuf::from("."))
+                .join(out_path_try)
+        };
+
+        // If identical to input, compute a safe sibling with suffix
+        if paths_equivalent(&in_path, &out_path_abs) {
+            return Ok(suffixed_output(&in_path, default_ext.unwrap_or("mkv")));
+        }
+        return Ok(out_path_abs);
+    }
+
+    // No output provided: compute default sibling with suffix and mkv
+    Ok(suffixed_output(&in_path, default_ext.unwrap_or("mkv")))
+}
+
+fn paths_equivalent(a: &Path, b: &Path) -> bool {
+    // Try canonicalize to compare real paths, fall back to string comparison
+    let ca = a.canonicalize().unwrap_or_else(|_| a.to_path_buf());
+    let cb = b.canonicalize().unwrap_or_else(|_| b.to_path_buf());
+    ca == cb
+}
+
+fn suffixed_output(input_path: &Path, out_ext: &str) -> PathBuf {
+    let parent = input_path.parent().unwrap_or_else(|| Path::new("."));
+    let stem = input_path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("output");
+    let mut name = String::with_capacity(stem.len() + 12 + out_ext.len());
+    name.push_str(stem);
+    name.push_str("_transcoded");
+    let mut out = parent.join(name);
+    out.set_extension(out_ext);
+    out
 }
 
 fn info(input: &str, json: bool) -> Result<()> {

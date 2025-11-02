@@ -1,5 +1,5 @@
 // file: tests/integration_tests.rs
-// version: 1.1.0
+// version: 1.2.0
 // guid: 2b3c4d5e-6f78-90ab-cdef-0123456789ab
 
 //! Integration tests for transcoderr CLI
@@ -126,6 +126,26 @@ fn test_transcode_dry_run() {
     assert!(
         stdout.contains("ffmpeg"),
         "Dry-run should show ffmpeg command"
+    );
+}
+
+#[test]
+fn transcode_dry_run_default_output_suffix_and_mkv() {
+    let test_file = common::testdata_dir().join("test_bars_480p_h265_aac.mkv");
+    // Omit output argument; expect default `<stem>_transcoded.mkv` next to input
+    let output = common::run_transcoderr(&["transcode", test_file.to_str().unwrap(), "--dry-run"])
+        .expect("Failed to run transcode dry-run with default output");
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    // Default output should be in same dir and use _transcoded.mkv suffix
+    let stem = test_file.file_stem().unwrap().to_string_lossy();
+    let parent = test_file.parent().unwrap();
+    let expected_name = format!("{}_transcoded.mkv", stem);
+    let expected_path = parent.join(expected_name);
+    assert!(
+        stdout.contains(expected_path.to_str().unwrap()),
+        "stdout was: {}",
+        stdout
     );
 }
 
