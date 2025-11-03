@@ -1,5 +1,5 @@
 <!-- file: README.md -->
-<!-- version: 0.7.0 -->
+<!-- version: 0.8.0 -->
 <!-- guid: 0a1b2c3d-4e5f-6789-abcd-ef0123456789 -->
 
 # transcoderr
@@ -50,6 +50,9 @@ cargo run -- transcode input.mp4 output.mkv --preset original-h265 --dry-run
 
 # Batch convert TV show directory to h265+aac
 cargo run -- batch /path/to/tv-shows /path/to/output --vcodec libx265 --acodec aac --ext mkv
+
+# Batch in-place (same directory) - adds '_transcoded' suffix to prevent overwrite
+cargo run -- batch /path/to/tv-shows /path/to/tv-shows --preset tv-h265-fast --dry-run
 
 # Batch with preset (original quality -> h265+aac 256k)
 cargo run -- batch /path/to/tv-shows /path/to/output --preset original-h265 --ext mkv

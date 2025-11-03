@@ -291,6 +291,9 @@ fn batch_transcode(
         bail!("Input directory does not exist: {}", input_dir);
     }
 
+    // Check if input and output directories are the same
+    let same_dir = paths_equivalent(input_path, output_path);
+
     // Parse comma-separated extensions
     let exts: Vec<&str> = input_exts.split(',').map(|s| s.trim()).collect();
 
@@ -305,22 +308,38 @@ fn batch_transcode(
     // Apply preset once to get effective settings
     let (eff_vcodec, eff_acodec, eff_extra) = apply_preset(preset, vcodec, acodec, extra);
 
-    println!(
-        "Found {} files to transcode (vcodec={}, acodec={}, ext={})",
-        files.len(),
-        eff_vcodec,
-        eff_acodec,
-        ext
-    );
+    if same_dir {
+        println!(
+            "Found {} files to transcode IN-PLACE (vcodec={}, acodec={}, ext={}) - output will use '_transcoded' suffix",
+            files.len(),
+            eff_vcodec,
+            eff_acodec,
+            ext
+        );
+    } else {
+        println!(
+            "Found {} files to transcode (vcodec={}, acodec={}, ext={})",
+            files.len(),
+            eff_vcodec,
+            eff_acodec,
+            ext
+        );
+    }
 
     for (idx, input_file) in files.iter().enumerate() {
-        // Calculate relative path and mirror structure
-        let rel_path = input_file
-            .strip_prefix(input_path)
-            .context("failed to strip prefix")?;
+        let output_file = if same_dir {
+            // When writing to same directory, use safe suffix
+            suffixed_output(input_file, ext)
+        } else {
+            // Calculate relative path and mirror structure in different output dir
+            let rel_path = input_file
+                .strip_prefix(input_path)
+                .context("failed to strip prefix")?;
 
-        let mut output_file = output_path.join(rel_path);
-        output_file.set_extension(ext);
+            let mut out = output_path.join(rel_path);
+            out.set_extension(ext);
+            out
+        };
 
         // Ensure output directory exists
         if let Some(parent) = output_file.parent() {

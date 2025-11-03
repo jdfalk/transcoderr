@@ -1,5 +1,5 @@
 // file: tests/integration_tests.rs
-// version: 1.2.0
+// version: 1.3.0
 // guid: 2b3c4d5e-6f78-90ab-cdef-0123456789ab
 
 //! Integration tests for transcoderr CLI
@@ -28,6 +28,41 @@ fn test_help_command() {
     assert!(
         stdout.contains("info"),
         "Help should mention 'info' command"
+    );
+}
+
+#[test]
+fn test_batch_same_directory_dry_run() {
+    let testdata = common::testdata_dir();
+
+    // Batch with same input and output directory
+    let output = common::run_transcoderr(&[
+        "batch",
+        testdata.to_str().unwrap(),
+        testdata.to_str().unwrap(),
+        "--preset",
+        "tv-h265-fast",
+        "--dry-run",
+    ])
+    .expect("Failed to run batch same-directory dry-run");
+
+    assert!(
+        output.status.success(),
+        "Batch same-dir dry-run should succeed"
+    );
+
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        stdout.contains("IN-PLACE"),
+        "Should indicate in-place processing"
+    );
+    assert!(
+        stdout.contains("_transcoded"),
+        "Should show _transcoded suffix"
+    );
+    assert!(
+        stdout.contains("_transcoded.mkv"),
+        "Should create .mkv files with suffix"
     );
 }
 
