@@ -1,5 +1,5 @@
 // file: src/main.rs
-// version: 0.6.0
+// version: 0.7.0
 // guid: 0f9e8d7c-6b5a-4c3d-2e1f-0a9b8c7d6e5f
 
 use std::fs;
@@ -184,16 +184,37 @@ fn paths_equivalent(a: &Path, b: &Path) -> bool {
 
 fn suffixed_output(input_path: &Path, out_ext: &str) -> PathBuf {
     let parent = input_path.parent().unwrap_or_else(|| Path::new("."));
-    let stem = input_path
-        .file_stem()
+    let stem = strict_stem(input_path);
+    let mut final_name = String::with_capacity(stem.len() + 1 + 12 + out_ext.len());
+    final_name.push_str(&stem);
+    final_name.push_str("_transcoded.");
+    final_name.push_str(out_ext);
+    parent.join(final_name)
+}
+
+// Derive the filename stem using the LAST '.' before the extension.
+// This avoids truncating names that legitimately contain dots (e.g., "Episode 1.11 ... .mkv").
+// For dotfiles (e.g., ".bashrc"), or names without extension, returns the whole name.
+fn strict_stem(path: &Path) -> String {
+    if let (Some(name_os), Some(ext_os)) = (path.file_name(), path.extension()) {
+        if let (Some(name), Some(ext)) = (name_os.to_str(), ext_os.to_str()) {
+            if !ext.is_empty() {
+                let needle = format!(".{}", ext);
+                if let Some(pos) = name.rfind(&needle) {
+                    if pos > 0 {
+                        return name[..pos].to_string();
+                    }
+                }
+            }
+            // Fallback: no recognizable extension position; return full name
+            return name.to_string();
+        }
+    }
+    // Ultimate fallback
+    path.file_stem()
         .and_then(|s| s.to_str())
-        .unwrap_or("output");
-    let mut name = String::with_capacity(stem.len() + 12 + out_ext.len());
-    name.push_str(stem);
-    name.push_str("_transcoded");
-    let mut out = parent.join(name);
-    out.set_extension(out_ext);
-    out
+        .unwrap_or("output")
+        .to_string()
 }
 
 fn info(input: &str, json: bool) -> Result<()> {

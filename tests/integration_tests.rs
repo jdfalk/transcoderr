@@ -1,5 +1,5 @@
 // file: tests/integration_tests.rs
-// version: 1.3.0
+// version: 1.4.0
 // guid: 2b3c4d5e-6f78-90ab-cdef-0123456789ab
 
 //! Integration tests for transcoderr CLI
@@ -64,6 +64,31 @@ fn test_batch_same_directory_dry_run() {
         stdout.contains("_transcoded.mkv"),
         "Should create .mkv files with suffix"
     );
+}
+
+#[test]
+fn test_filename_with_multiple_dots_preserves_stem() {
+    use std::io::Write;
+    let temp = TempDir::new().expect("temp dir");
+    let file_name = "Neon Genesis Evangelion (1995) - s00e003 - Evangelion - 1.11 - You Are (Not) Alone - Bluray-1080p - AV1 10Bit Opus[JA+EN] [EN] - tvdb-70350.mkv";
+    let file_path = temp.path().join(file_name);
+    // Create an empty file so it is discovered
+    let mut f = std::fs::File::create(&file_path).expect("create file");
+    f.write_all(b"\n").ok();
+
+    let output = common::run_transcoderr(&[
+        "batch",
+        temp.path().to_str().unwrap(),
+        temp.path().to_str().unwrap(),
+        "--dry-run",
+    ])
+    .expect("run batch");
+
+    assert!(output.status.success());
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    // Ensure the "1.11" part of the stem is preserved, and suffix is appended
+    assert!(stdout.contains("1.11"), "stdout: {}", stdout);
+    assert!(stdout.contains("_transcoded.mkv"), "stdout: {}", stdout);
 }
 
 #[test]
