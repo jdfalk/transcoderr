@@ -1,11 +1,13 @@
 # Dependabot Configuration
-# version: 1.0.0
+# version: 1.0.1
 # guid: a1b2c3d4-e5f6-7890-abcd-ef1234567890
 
 version: 2
 
-multi-ecosystem-groups:
-  dependencies:
+updates:
+  # Cargo (Rust dependencies)
+  - package-ecosystem: cargo
+    directory: /
     schedule:
       interval: weekly
       day: tuesday
@@ -14,29 +16,29 @@ multi-ecosystem-groups:
     labels:
       - dependencies
       - dependabot
+      - tech:rust
     commit-message:
       prefix: deps
       include: scope
-
-updates:
-  # Cargo
-  - package-ecosystem: cargo
-    directory: /
-    patterns: ["*"]
-    multi-ecosystem-group: dependencies
-    labels:
-      - tech:rust
     ignore:
       - dependency-name: "*"
         update-types:
           - version-update:semver-major
 
-  # Github Actions
+  # GitHub Actions
   - package-ecosystem: github-actions
     directory: /
-    patterns: ["*"]
-    multi-ecosystem-group: dependencies
+    schedule:
+      interval: weekly
+      day: tuesday
+      time: "10:00"
+      timezone: America/New_York
     labels:
+      - dependencies
+      - dependabot
       - github-actions
       - ci-cd
+    commit-message:
+      prefix: deps
+      include: scope
 
